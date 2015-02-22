@@ -3,6 +3,7 @@ package org.fruitiex.ruokalistatforwear;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -16,21 +17,21 @@ import org.json.JSONObject;
 /**
  * Wearable listener service for data layer messages
  */
-public class ListenerService extends WearableListenerService{
+public class ListenerService extends WearableListenerService {
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
+        final String message = new String(messageEvent.getData());
+        Log.v("myTag", "Message path received on watch is: " + messageEvent.getPath());
+        Log.v("myTag", "Message received on watch is: " + message);
         if (messageEvent.getPath().equals("/ruokalistat")) {
-            final String message = new String(messageEvent.getData());
-            Log.v("myTag", "Message path received on watch is: " + messageEvent.getPath());
-            Log.v("myTag", "Message received on watch is: " + message);
-
             try {
                 JSONArray json = new JSONArray(message);
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getBaseContext());
                 NotificationCompat.WearableExtender wExtender = new NotificationCompat.WearableExtender();
 
-                mBuilder.setSmallIcon(R.drawable.ic_launcher);
+                mBuilder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.lunch));
+                mBuilder.setSmallIcon(R.drawable.icon);
 
                 boolean firstPage = true;
 
