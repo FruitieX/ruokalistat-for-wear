@@ -25,7 +25,6 @@ public class ListenerService extends WearableListenerService{
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-
         if (messageEvent.getPath().equals("/ruokalistat")) {
             final String message = new String(messageEvent.getData());
             Log.v("myTag", "Message path received on watch is: " + messageEvent.getPath());
@@ -35,6 +34,7 @@ public class ListenerService extends WearableListenerService{
             try {
                 json = new JSONArray(message);
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getBaseContext());
+                NotificationCompat.WearableExtender wExtender = new NotificationCompat.WearableExtender();
 
                 mBuilder.setSmallIcon(R.drawable.ic_launcher);
 
@@ -43,57 +43,41 @@ public class ListenerService extends WearableListenerService{
                 for (int i = 0; i < json.length(); i++) {
                     JSONObject restaurant = json.getJSONObject(i);
 
-                    if (restaurant.has("meals")) {
-                        // get today's meal
-                        JSONObject weekMeals = restaurant.getJSONObject("meals");
-                        if (weekMeals.has("fi")) {
+                    String s = "";
 
-                            JSONArray weekMealsFi = weekMeals.getJSONArray("fi");
+                    // today's meals
+                    JSONArray meals = restaurant.getJSONArray("meals");
+                    for (int j = 0; j < meals.length(); j++) {
+                        s += "- " + meals.getString(j) + "\n\n";
+                    }
 
-                            // any locale that starts week with monday
-                            Calendar calendar = Calendar.getInstance(Locale.GERMANY);
-                            int day = calendar.get(Calendar.DAY_OF_WEEK);
-                            day = 3;
+                    Log.v("myTag", "Adding notification: " + s);
+                    if (firstPage) {
+                        // first page has to be handled separately
+                        mBuilder.setContentTitle(restaurant.getString("name"));
+                        mBuilder.setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(s));
+                        firstPage = false;
+                    } else {
+                        // add this page to the notification
+                        NotificationCompat.BigTextStyle pageStyle = new NotificationCompat.BigTextStyle();
+                        pageStyle.setBigContentTitle(restaurant.getString("name"))
+                                .bigText(s);
 
-                            String s = "";
-                            // restaurant name
+                        Notification page =
+                                new NotificationCompat.Builder(getBaseContext())
+                                        .setStyle(pageStyle)
+                                        .build();
 
-                            // does restaurant have any meals today?
-                            if (weekMealsFi.length() >= day) {
-                                // today's meals
-                                JSONArray meals = weekMealsFi.getJSONArray(day - 1);
-                                for (int j = 0; j < meals.length(); j++) {
-                                    s += meals.getString(j) + "\n";
-                                }
-                            } else
-                                s += "No meals today.";
-
-                            if (firstPage) {
-                                mBuilder.setContentTitle(restaurant.getString("name"));
-                                mBuilder.setStyle(new NotificationCompat.BigTextStyle()
-                                        .bigText(s));
-                            } else {
-                                // Create a big text style for the this page
-                                NotificationCompat.BigTextStyle pageStyle = new NotificationCompat.BigTextStyle();
-                                pageStyle.setBigContentTitle(restaurant.getString("name"))
-                                        .bigText(s);
-
-                                Notification page =
-                                        new NotificationCompat.Builder(getBaseContext())
-                                                .setStyle(pageStyle)
-                                                .build();
-
-                                mBuilder.extend(new NotificationCompat.WearableExtender()
-                                        .addPage(page));
-                            }
-                        }
+                        wExtender.addPage(page);
                     }
                 }
 
-
+                mBuilder.extend(wExtender);
+                // send notification
                 NotificationManager mNotificationManager =
                         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                // mId allows you to update the notification later on.
+                // hardcoded id: will always replace old notification with new one
                 int mId = 1;
                 mNotificationManager.notify(mId, mBuilder.build());
             } catch (JSONException e) {
