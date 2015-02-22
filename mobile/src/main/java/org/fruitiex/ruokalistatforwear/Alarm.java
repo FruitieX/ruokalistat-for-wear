@@ -66,8 +66,20 @@ public class Alarm extends BroadcastReceiver implements
     {
         AlarmManager am = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
         Intent i = new Intent(context, Alarm.class);
+
+        Calendar cal = Calendar.getInstance();
+        long curTime = cal.getTimeInMillis();
+
+        cal.set(Calendar.HOUR_OF_DAY, 8);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+
+        // did the sync time already pass? set it for tomorrow instead
+        if(curTime > cal.getTimeInMillis())
+            cal.add(Calendar.DATE, 1);
+
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, i, 0);
-        am.setInexactRepeating(AlarmManager.RTC, SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_DAY, AlarmManager.INTERVAL_DAY, pi); // Millisec * Second * Minute
+        am.setInexactRepeating(AlarmManager.RTC, cal.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
     }
 
     public void CancelAlarm(Context context)
