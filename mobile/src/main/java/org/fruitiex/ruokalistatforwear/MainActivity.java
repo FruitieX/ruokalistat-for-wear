@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Calendar;
-import java.util.Locale;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -151,6 +150,7 @@ public class MainActivity extends ActionBarActivity implements
                 final JSONArray results = new JSONArray();
 
                 JSONArray json = new JSONArray(reqResult);
+                boolean mealFound = false;
 
                 // traverse through all restaurants user is interested in, in order
                 for (String userRestaurant : userRestaurants) {
@@ -176,19 +176,25 @@ public class MainActivity extends ActionBarActivity implements
 
                                 JSONArray weekMeals = weekMealLangs.getJSONArray(userLang);
 
-                                // any locale that starts week with monday will do here
-                                Calendar calendar = Calendar.getInstance(Locale.GERMANY);
+                                // sunday is day 1, monday day 2 etc...
+                                Calendar calendar = Calendar.getInstance();
                                 int day = calendar.get(Calendar.DAY_OF_WEEK);
-                                //day = 3; // DEBUG purposes only
+                                day -= 2; // we want monday to be 0
+                                if (day == -1)
+                                    day = 6; // wrap around sunday to 6
+
+                                Log.i("myTag", "getting meals for day " + day);
+                                //day = 2; // DEBUG purposes only
 
                                 JSONArray mealResults = new JSONArray();
                                 // does restaurant have any meals today?
-                                if (weekMeals.length() >= day) {
+                                if (weekMeals.length() > day) {
                                     // today's meals
-                                    JSONArray meals = weekMeals.getJSONArray(day - 1);
+                                    JSONArray meals = weekMeals.getJSONArray(day);
                                     for (int j = 0; j < meals.length(); j++) {
                                         mealResults.put(meals.getString(j));
                                     }
+                                    mealFound = true;
                                 } else
                                     mealResults.put("No meals today.");
 
@@ -200,7 +206,8 @@ public class MainActivity extends ActionBarActivity implements
                     }
                 }
 
-                new SendToDataLayerThread("/ruokalistat", results.toString()).start();
+                if(mealFound)
+                    new SendToDataLayerThread("/ruokalistat", results.toString()).start();
 
             } catch (JSONException e) {
                 Log.e("myTag", e.getLocalizedMessage());
