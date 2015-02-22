@@ -3,9 +3,7 @@ package org.fruitiex.ruokalistatforwear;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.wearable.MessageEvent;
@@ -14,9 +12,6 @@ import com.google.android.gms.wearable.WearableListenerService;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Calendar;
-import java.util.Locale;
 
 /**
  * Wearable listener service for data layer messages
@@ -30,9 +25,8 @@ public class ListenerService extends WearableListenerService{
             Log.v("myTag", "Message path received on watch is: " + messageEvent.getPath());
             Log.v("myTag", "Message received on watch is: " + message);
 
-            JSONArray json = null;
             try {
-                json = new JSONArray(message);
+                JSONArray json = new JSONArray(message);
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getBaseContext());
                 NotificationCompat.WearableExtender wExtender = new NotificationCompat.WearableExtender();
 
@@ -48,7 +42,7 @@ public class ListenerService extends WearableListenerService{
                     // today's meals
                     JSONArray meals = restaurant.getJSONArray("meals");
                     for (int j = 0; j < meals.length(); j++) {
-                        s += "- " + meals.getString(j) + "\n\n";
+                        s += meals.getString(j) + "\n\n";
                     }
 
                     Log.v("myTag", "Adding notification: " + s);
@@ -59,15 +53,12 @@ public class ListenerService extends WearableListenerService{
                                 .bigText(s));
                         firstPage = false;
                     } else {
-                        // add this page to the notification
-                        NotificationCompat.BigTextStyle pageStyle = new NotificationCompat.BigTextStyle();
-                        pageStyle.setBigContentTitle(restaurant.getString("name"))
-                                .bigText(s);
-
                         Notification page =
-                                new NotificationCompat.Builder(getBaseContext())
-                                        .setStyle(pageStyle)
-                                        .build();
+                            new NotificationCompat.Builder(getBaseContext())
+                                    .setContentTitle(restaurant.getString("name"))
+                                    .setStyle(new NotificationCompat.BigTextStyle()
+                                        .bigText(s))
+                                    .build();
 
                         wExtender.addPage(page);
                     }
@@ -81,12 +72,12 @@ public class ListenerService extends WearableListenerService{
                 int mId = 1;
                 mNotificationManager.notify(mId, mBuilder.build());
             } catch (JSONException e) {
-                System.out.println(e);
+                Log.e("myTag", e.getLocalizedMessage());
             }
-        }
-        else {
+        } else if (messageEvent.getPath().equals("/message_path")) {
+            Log.v("myTag", "got msg " + new String(messageEvent.getData()));
+        } else {
             super.onMessageReceived(messageEvent);
         }
     }
-
 }
