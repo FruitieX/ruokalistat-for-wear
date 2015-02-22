@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -183,8 +182,8 @@ public class Alarm extends BroadcastReceiver implements
                                 if (day == -1)
                                     day = 6; // wrap around sunday to 6
 
-                                day = 2; // DEBUG purposes only
-                                Log.i("myTag", "getting meals for day " + day);
+                                //day = 2; // DEBUG purposes only
+                                Log.i("ruokalistat", "getting meals for day " + day);
 
                                 JSONArray mealResults = new JSONArray();
                                 // does restaurant have any meals today?
@@ -208,9 +207,11 @@ public class Alarm extends BroadcastReceiver implements
 
                 if(mealFound)
                     new SendToDataLayerThread("/ruokalistat", results.toString()).start();
+                else
+                    Log.i("ruokalistat", "No meals found for today, not sending anything to wear");
 
             } catch (JSONException e) {
-                Log.e("myTag", e.getLocalizedMessage());
+                Log.e("ruokalistat", e.getLocalizedMessage());
             }
         }
     }
@@ -246,10 +247,10 @@ public class Alarm extends BroadcastReceiver implements
             for (Node node : nodes.getNodes()) {
                 MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(googleClient, node.getId(), path, message.getBytes()).await();
                 if (result.getStatus().isSuccess()) {
-                    Log.v("myTag", "Message: {" + message + "} sent to: " + node.getDisplayName());
+                    Log.v("ruokalistat", "Message: {" + message + "} sent to: " + node.getDisplayName());
                 } else {
                     // Log an error
-                    Log.v("myTag", "ERROR: failed to send Message");
+                    Log.v("ruokalistat", "ERROR: failed to send Message");
                 }
                 googleClient.disconnect();
             }

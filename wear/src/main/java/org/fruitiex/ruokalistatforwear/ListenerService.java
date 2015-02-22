@@ -22,8 +22,8 @@ public class ListenerService extends WearableListenerService {
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         final String message = new String(messageEvent.getData());
-        Log.v("myTag", "Message path received on watch is: " + messageEvent.getPath());
-        Log.v("myTag", "Message received on watch is: " + message);
+        Log.v("ruokalistat", "Message path received on watch is: " + messageEvent.getPath());
+        Log.v("ruokalistat", "Message received on watch is: " + message);
         if (messageEvent.getPath().equals("/ruokalistat")) {
             try {
                 JSONArray json = new JSONArray(message);
@@ -46,7 +46,7 @@ public class ListenerService extends WearableListenerService {
                         s += meals.getString(j) + "\n\n";
                     }
 
-                    Log.v("myTag", "Adding notification: " + s);
+                    Log.v("ruokalistat", "Adding notification: " + s);
                     if (firstPage) {
                         // first page has to be handled separately
                         mBuilder.setContentTitle(restaurant.getString("name"));
@@ -59,6 +59,7 @@ public class ListenerService extends WearableListenerService {
                                     .setContentTitle(restaurant.getString("name"))
                                     .setStyle(new NotificationCompat.BigTextStyle()
                                         .bigText(s))
+                                    .setSmallIcon(R.drawable.icon)
                                     .build();
 
                         wExtender.addPage(page);
@@ -73,10 +74,10 @@ public class ListenerService extends WearableListenerService {
                 int mId = 1;
                 mNotificationManager.notify(mId, mBuilder.build());
             } catch (JSONException e) {
-                Log.e("myTag", e.getLocalizedMessage());
+                Log.e("ruokalistat", e.getLocalizedMessage());
             }
         } else if (messageEvent.getPath().equals("/message_path")) {
-            Log.v("myTag", "got msg " + new String(messageEvent.getData()));
+            Log.v("ruokalistat", "got msg " + new String(messageEvent.getData()));
         } else {
             super.onMessageReceived(messageEvent);
         }
